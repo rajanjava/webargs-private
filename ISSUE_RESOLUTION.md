@@ -43,6 +43,11 @@ AssertionError: assert ['P', 'r', 'o', 'm', 'e', 't', 'h', 'e', 'u', 's', ' ', '
 
 ---
 
+## Solution Approach
+1. **Identify Multi-Value Header Loss in Tornado:** Tornado's `HTTPHeaders` stores multiple values for the same header name and exposes `.get_list(name)`, whereas standard `.get(name)` concatenates or drops values. `MultiDictProxy` / `TornadoParser` did not leverage `get_list` when parsing multi-value list fields from headers.
+2. **Preserve Multi-Value Semantics via `get_list`:** Updated `TornadoParser` and `MultiDictProxy` to detect and use `HTTPHeaders.get_list()` for list-typed header schemas while keeping single-value header extraction unchanged.
+3. **TDD & Regression Safety:** Added `test_tornado_httpheaders_multiple_values` in `tests/test_tornadoparser.py` testing repeated HTTP headers in Tornado requests.
+
 ## 4. Code Fix
 1. In `src/webargs/tornadoparser.py`:
    Within `WebArgsTornadoMultiDictProxy.__getitem__`, checked `if hasattr(self.data, "get_list"): value = self.data.get_list(key)` when `key in self.multiple_keys` before decoding values.
